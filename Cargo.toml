@@ -1,0 +1,24 @@
+[package]
+name = "clash_clap"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "*", features = ["macros", "rt-multi-thread"] }
+chrono = "*"
+anyhow = "1.0.52"
+clap = "2.34.0"
+# clash_profile = {path = "./clash_profile"}
+sysinfo = "0.22.4"
+serde_json = "*"
+dotenv = "0.15.0"
+hyper = { version = "*", features = ["client", "http1", "http2", "stream"] }
+hyper-tls = "*"
+base64 = "*"
+regex = "*"
+urlencoding = "*"
+lazy_static = "*"
+serde = { version = "*", features = ["derive"] }
+dotenv_codegen = "*"
