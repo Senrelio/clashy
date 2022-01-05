@@ -19,35 +19,35 @@ async fn main() -> anyhow::Result<()> {
                 .arg(Arg::with_name("group").short("-g").takes_value(true))
                 .arg(Arg::with_name("to").takes_value(true)),
         )
-        .get_matches();
+        .subcommand(SubCommand::with_name("status"))
+        .get_matches(); 
 
     match matches.subcommand_name() {
         Some("start") => {
             // let default = std::env::var("DEFAULT_PROFILE")?;
             let recent = clash_clap::config::get_recent_config()?;
             let recent = recent.to_str().unwrap();
-            println!("{}", recent);
             let config = matches
                 .subcommand_matches("start")
                 .unwrap()
                 .value_of("config")
                 .unwrap_or(recent);
             handle::start(config)?;
-            println!("start clash with {}.", config);
         }
         Some("stop") => {
             handle::stop();
-            println!("clash stopped.");
         }
         Some("update") => {
-            let new_config = handle::update().await?;
-            println!("start clash with {}.", new_config);
+            let _new_config = handle::update().await?;
         }
         Some("switch") => {
             let subcommand = matches.subcommand_matches("switch").unwrap();
             let group = subcommand.value_of("group").unwrap_or("Choice");
             let to = subcommand.value_of("to").unwrap();
             handle::switch(group, to)?;
+        }
+        Some("status") => {
+            handle::status().await?;
         }
         Some(_) => panic!("unknown subcommand"),
         None => panic!(),

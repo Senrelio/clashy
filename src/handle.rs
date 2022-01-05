@@ -1,7 +1,8 @@
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
 
-use anyhow::Ok;
+use anyhow::{Ok, Result};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use sysinfo::{ProcessExt, SystemExt};
 
 use crate::config::{self, get_recent_config};
@@ -27,6 +28,12 @@ pub fn start(config: impl AsRef<str>) -> anyhow::Result<()> {
         .args(["-f", config.as_ref()])
         .stdout(output)
         .spawn()?;
+    let service_data = ServiceData {
+        current_profile: String::from(config.as_ref()),
+    };
+    let mut f_service = std::fs::File::create(std::env::var("CLASH_SERVICE_DATA")?)?;
+    f_service.write_all(serde_json::to_string_pretty(&service_data)?.as_bytes())?;
+    f_service.flush()?;
     println!("clash started with {}", config.as_ref());
     Ok(())
 }
@@ -92,6 +99,11 @@ pub fn switch(group: &str, to: &str) -> anyhow::Result<String> {
     Ok(f_name)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct ServiceData {
+    current_profile: String,
+}
+
 #[test]
 fn regex_test() {
     let group = "telegram";
@@ -100,4 +112,32 @@ fn regex_test() {
     // let re = Regex::new(r".*name: 'telegram'.*proxies: \[.*\]").unwrap();
     let input = "     - { name: 'telegram', type: select, proxies: ['US'] }";
     assert!(re.is_match(input));
+    let re = Regex::new(r"name: '(?P<name>.*)',.*proxies: \[(?P<proxies>.*)\]").unwrap();
+    assert!(re.is_match(input));
+    let caps = re.captures(input).unwrap();
+    let name = caps.name("name").unwrap().as_str();
+    let proxies = caps.name("proxies").unwrap().as_str();
+    assert_eq!(name, "telegram");
+    assert_eq!(proxies, "'US'");
+}
+
+pub async fn status() -> Result<()> {
+    let data = std::fs::read_to_string(std::env::var("CLASH_SERVICE_DATA")?)?;
+    let data: ServiceData = serde_json::from_str(&data)?;
+    let f_profile = std::fs::read_to_string(&data.current_profile)?;
+    println!("current profile: {}", &data.current_profile);
+    let mut groups = HashMap::new();
+    let re = Regex::new(r"name: (?P<name>.*),.*proxies: \[(?P<proxies>.*)\]")?;
+    for l in f_profile.lines() {
+        if let Some(caps) = re.captures(l) {
+            let name = caps.name("name").unwrap().as_str();
+            let proxies = caps.name("proxies").unwrap().as_str();
+            groups.insert(name, proxies);
+        }
+    }
+    println!("current groups:");
+    for (k, v) in groups {
+        println!("{}: {}", k, v);
+    }
+    Ok(())
 }

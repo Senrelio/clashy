@@ -130,7 +130,7 @@ fn parse_group(servers: &[Server]) -> Result<String> {
     buf.extend_from_slice(
         "    - { name: 'Choice', type: select, proxies: ['HongKong'] }\n".as_bytes(),
     );
-    buf.extend_from_slice("    - { name: 'telegram', type: select, proxies: ['US'] }\n".as_bytes());
+    buf.extend_from_slice("    - { name: 'telegram', type: select, proxies: ['Choice'] }\n".as_bytes());
     Ok(String::from_utf8(buf)?)
 }
 
