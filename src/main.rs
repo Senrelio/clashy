@@ -23,11 +23,15 @@ async fn main() -> anyhow::Result<()> {
 
     match matches.subcommand_name() {
         Some("start") => {
-            let default = std::env::var("DEFAULT_PROFILE")?;
+            // let default = std::env::var("DEFAULT_PROFILE")?;
+            let recent = clash_clap::config::get_recent_config()?;
+            let recent = recent.to_str().unwrap();
+            println!("{}", recent);
             let config = matches
                 .subcommand_matches("start")
                 .unwrap()
-                .value_of("config").unwrap_or(&default);
+                .value_of("config")
+                .unwrap_or(recent);
             handle::start(config)?;
             println!("start clash with {}.", config);
         }
