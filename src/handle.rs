@@ -141,3 +141,15 @@ pub async fn status() -> Result<()> {
     }
     Ok(())
 }
+
+pub async fn edit() -> Result<()> {
+    let data = std::fs::read_to_string(std::env::var("CLASH_SERVICE_DATA")?)?;
+    let data: ServiceData = serde_json::from_str(&data)?;
+    let path = data.current_profile;
+    println!("editing {}", &path);
+    let status = std::process::Command::new("nvim").arg(&path).spawn()?.wait()?;
+    assert!(status.success());
+    stop();
+    start(&path)?;
+    Ok(())
+}
