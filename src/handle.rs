@@ -147,7 +147,8 @@ pub async fn edit() -> Result<()> {
     let data: ServiceData = serde_json::from_str(&data)?;
     let path = data.current_profile;
     println!("editing {}", &path);
-    let status = std::process::Command::new("nvim").arg(&path).spawn()?.wait()?;
+    let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
+    let status = std::process::Command::new(editor).arg(&path).spawn()?.wait()?;
     assert!(status.success());
     stop();
     start(&path)?;
